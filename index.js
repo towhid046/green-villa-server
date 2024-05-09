@@ -1,7 +1,7 @@
 const express = require("express");
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
@@ -11,7 +11,10 @@ const port = process.env.PORT || 5000;
 // middlewares
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://green-villla.firebaseapp.com"],
+    origin: [
+      "http://localhost:5173",
+      "https://green-villla.web.app",
+    ],
     credentials: true,
   })
 );
@@ -39,7 +42,6 @@ const verifyToken = async (req, res, next) => {
   if (!token) {
     return res.status(401).send("Unauthorized");
   }
-
   jwt.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
     if (err) {
       return res.status(401).send("Unauthorized");
@@ -68,6 +70,15 @@ async function run() {
           secure: false,
         })
         .send({ success: true });
+    });
+
+    // clear cookie
+    app.get("/logout", async (req, res) => {
+      res.clearCookie("token", {
+        path: "/",
+        maxAge: 10,
+      });
+      res.redirect("/");
     });
 
     // get all estates data:
@@ -142,6 +153,17 @@ async function run() {
       const estate = req.body;
       const estateDoc = { ...estate };
       const result = await estateCollection.insertOne(estateDoc);
+      res.send(result);
+    });
+
+    // get user cart data:
+    app.post("/estateIds", async (req, res) => {
+      const estateIds = req.body;
+      const estateId = estateIds.map((id) => new ObjectId(id));
+      const query = {
+        _id: { $in: estateId },
+      };
+      const result = await estateCollection.find(query).toArray();
       res.send(result);
     });
 
