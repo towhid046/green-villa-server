@@ -14,6 +14,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://green-villla.web.app",
+      "https://green-villla.firebaseapp.com",
     ],
     credentials: true,
   })
@@ -67,7 +68,8 @@ async function run() {
       res
         .cookie("token", token, {
           httpOnly: true,
-          secure: false,
+          secure: true,
+          sameSite: "none",
         })
         .send({ success: true });
     });
